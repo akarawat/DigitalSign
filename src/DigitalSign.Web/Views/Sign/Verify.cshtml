@@ -1,0 +1,72 @@
+@model DigitalSign.Web.Models.VerifyRequest
+@{
+    ViewData["Title"] = "ตรวจสอบลายเซ็น";
+    var result = ViewBag.VerifyResult as DigitalSign.Web.Models.VerifyResult;
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        @if (result != null)
+        {
+            <div class="alert @(result.IsOverallValid ? "alert-success" : "alert-danger") mb-4">
+                <div class="d-flex align-items-center">
+                    <i class="bi @(result.IsOverallValid ? "bi-patch-check-fill" : "bi-x-circle-fill") fs-4 me-3"></i>
+                    <div>
+                        <div class="fw-bold fs-5">
+                            @(result.IsOverallValid ? "ลายเซ็นถูกต้อง ✓" : "ลายเซ็นไม่ถูกต้อง ✗")
+                        </div>
+                        <small>
+                            Signature: @(result.IsSignatureValid ? "✓ Valid" : "✗ Invalid") |
+                            Certificate: @(result.IsCertificateValid ? "✓ Valid" : "✗ Expired") |
+                            ลงโดย: @result.SignedBy |
+                            ตรวจสอบเมื่อ: @result.VerifiedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")
+                        </small>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-patch-check-fill"></i> ตรวจสอบลายเซ็นดิจิทัล</h5>
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="Verify" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label asp-for="OriginalData" class="form-label fw-semibold"></label>
+                            <textarea asp-for="OriginalData" class="form-control" rows="3"
+                                      placeholder="ข้อมูลต้นฉบับที่ใช้ Sign..."></textarea>
+                            <span asp-validation-for="OriginalData" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="SignatureBase64" class="form-label fw-semibold"></label>
+                            <textarea asp-for="SignatureBase64" class="form-control font-monospace" rows="4"
+                                      placeholder="วาง Signature Base64 ที่นี่..."></textarea>
+                            <span asp-validation-for="SignatureBase64" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="CertThumbprint" class="form-label fw-semibold"></label>
+                            <input asp-for="CertThumbprint" class="form-control font-monospace"
+                                   placeholder="Certificate Thumbprint..." />
+                            <span asp-validation-for="CertThumbprint" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-patch-check"></i> ตรวจสอบ
+                            </button>
+                            <a href="/" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> ยกเลิก
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

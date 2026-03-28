@@ -1,0 +1,78 @@
+@model DigitalSign.Web.Models.SignResult
+@{
+    ViewData["Title"] = "ผลการลงลายเซ็น";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-check-circle-fill"></i> ลงลายเซ็นสำเร็จ</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <small class="text-muted">Reference ID</small>
+                        <div class="fw-semibold">@Model?.ReferenceId</div>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted">ลงลายเซ็นโดย</small>
+                        <div class="fw-semibold">@Model?.SignedBy</div>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted">วันที่/เวลา</small>
+                        <div class="fw-semibold">@Model?.SignedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</div>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted">Certificate หมดอายุ</small>
+                        <div class="fw-semibold">@Model?.CertExpiry.ToLocalTime().ToString("dd/MM/yyyy")</div>
+                    </div>
+                    <div class="col-12">
+                        <small class="text-muted">Data Hash (SHA-256)</small>
+                        <div class="font-monospace small text-break bg-light p-2 rounded">
+                            @Model?.DataHash
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <small class="text-muted">Digital Signature (Base64)</small>
+                        <textarea class="form-control font-monospace small" rows="4" readonly>@Model?.SignatureBase64</textarea>
+                    </div>
+                    <div class="col-12">
+                        <small class="text-muted">Certificate Thumbprint</small>
+                        <div class="font-monospace small text-break bg-light p-2 rounded">
+                            @Model?.CertThumbprint
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4" />
+
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="/Sign" class="btn btn-primary">
+                        <i class="bi bi-pen"></i> Sign ใหม่
+                    </a>
+                    <a href="/Sign/Verify" class="btn btn-outline-success">
+                        <i class="bi bi-patch-check"></i> ตรวจสอบลายเซ็น
+                    </a>
+                    <button class="btn btn-outline-secondary" onclick="copySignature()">
+                        <i class="bi bi-clipboard"></i> Copy Signature
+                    </button>
+                    <a href="/" class="btn btn-outline-secondary">
+                        <i class="bi bi-house"></i> หน้าหลัก
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+function copySignature() {
+    const sig = "@Model?.SignatureBase64";
+    navigator.clipboard.writeText(sig).then(() => {
+        alert("Copy Signature แล้ว!");
+    });
+}
+</script>
+}

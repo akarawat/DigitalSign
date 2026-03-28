@@ -1,0 +1,13 @@
+## .NET
+[Bb]in/
+[Oo]bj/
+.vs/
+*.user
+*.suo
+logs/
+publish/
+*.pfx
+appsettings.Production.json
+appsettings.Development.json
+.DS_Store
+Thumbs.db

@@ -1,0 +1,110 @@
+using DigitalSign.Web.Models;
+using DigitalSign.Web.Services;
+using Microsoft.AspNetCore.Mvc;
+
+namespace DigitalSign.Web.Controllers;
+
+public class SignController : Controller
+{
+    private readonly IDigitalSignService _signService;
+
+    public SignController(IDigitalSignService signService)
+    {
+        _signService = signService;
+    }
+
+    // ── Sign Data ─────────────────────────────────────────────────────────────
+    [HttpGet]
+    public IActionResult Index() => View(new SignRequest());
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> Index(SignRequest model)
+    {
+        if (!ModelState.IsValid) return View(model);
+
+        var result = await _signService.SignDataAsync(model);
+        if (result == null || !result.IsSuccess)
+        {
+            ModelState.AddModelError("", result?.ErrorMessage ?? "ไม่สามารถ Sign ได้ กรุณาลองใหม่");
+            return View(model);
+        }
+
+        TempData["SignResult"]   = System.Text.Json.JsonSerializer.Serialize(result);
+        TempData["SuccessMsg"]   = "Sign สำเร็จแล้ว";
+        return RedirectToAction(nameof(SignResult));
+    }
+
+    [HttpGet]
+    public IActionResult SignResult()
+    {
+        var json = TempData["SignResult"] as string;
+        if (string.IsNullOrEmpty(json)) return RedirectToAction(nameof(Index));
+        var result = System.Text.Json.JsonSerializer.Deserialize<SignResult>(json);
+        return View(result);
+    }
+
+    // ── Verify ────────────────────────────────────────────────────────────────
+    [HttpGet]
+    public IActionResult Verify() => View(new VerifyRequest());
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> Verify(VerifyRequest model)
+    {
+        if (!ModelState.IsValid) return View(model);
+
+        var result = await _signService.VerifySignatureAsync(model);
+        ViewBag.VerifyResult = result;
+        return View(model);
+    }
+
+    // ── PDF Sign ──────────────────────────────────────────────────────────────
+    [HttpGet]
+    public IActionResult PdfSign() => View(new PdfSignRequest());
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> PdfSign(PdfSignRequest model)
+    {
+        if (!ModelState.IsValid) return View(model);
+        if (model.PdfFile == null || model.PdfFile.Length == 0)
+        {
+            ModelState.AddModelError("PdfFile", "กรุณาเลือกไฟล์ PDF");
+            return View(model);
+        }
+
+        // แปลง PDF → Base64
+        using var ms = new MemoryStream();
+        await model.PdfFile.CopyToAsync(ms);
+        var pdfBase64 = Convert.ToBase64String(ms.ToArray());
+
+        var result = await _signService.SignPdfAsync(
+            pdfBase64, model.DocumentName, model.ReferenceId,
+            model.Reason, model.Location);
+
+        if (result == null || !result.IsSuccess)
+        {
+            ModelState.AddModelError("", result?.ErrorMessage ?? "ไม่สามารถ Sign PDF ได้");
+            return View(model);
+        }
+
+        // Return signed PDF เป็น download
+        var signedBytes = Convert.FromBase64String(result.PdfBase64);
+        var fileName    = $"signed_{model.DocumentName}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+        return File(signedBytes, "application/pdf", fileName);
+    }
+
+    // ── Audit Log ─────────────────────────────────────────────────────────────
+    [HttpGet]
+    public async Task<IActionResult> Audit(int page = 1)
+    {
+        var result = await _signService.GetMyAuditAsync(page, 20);
+        return View(result);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> AuditDetail(string referenceId)
+    {
+        var records = await _signService.GetAuditByReferenceAsync(referenceId);
+        ViewBag.ReferenceId = referenceId;
+        return View(records);
+    }
+}

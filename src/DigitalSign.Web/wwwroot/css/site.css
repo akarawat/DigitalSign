@@ -1,0 +1,27 @@
+/* BT Digital Sign — site.css */
+
+.card-hover {
+    transition: transform .15s, box-shadow .15s;
+    cursor: pointer;
+}
+.card-hover:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.12) !important;
+}
+
+.font-monospace {
+    font-family: 'Courier New', monospace;
+    font-size: .85rem;
+}
+
+.footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+}
+
+body {
+    padding-bottom: 60px;
+}

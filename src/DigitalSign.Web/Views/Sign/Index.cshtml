@@ -1,0 +1,71 @@
+@model DigitalSign.Web.Models.SignRequest
+@{
+    ViewData["Title"] = "Sign ข้อมูล";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-pen-fill"></i> ลงลายเซ็นดิจิทัล</h5>
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="Index" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label asp-for="DataToSign" class="form-label fw-semibold"></label>
+                            <textarea asp-for="DataToSign" class="form-control" rows="4"
+                                      placeholder="ใส่ข้อมูลที่ต้องการลงลายเซ็น..."></textarea>
+                            <span asp-validation-for="DataToSign" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="ReferenceId" class="form-label fw-semibold"></label>
+                            <input asp-for="ReferenceId" class="form-control"
+                                   placeholder="เช่น PO-2026-001" />
+                            <span asp-validation-for="ReferenceId" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Purpose" class="form-label fw-semibold"></label>
+                            <select asp-for="Purpose" class="form-select">
+                                <option value="">-- เลือกวัตถุประสงค์ --</option>
+                                <option value="Approved">อนุมัติ (Approved)</option>
+                                <option value="Certified">รับรอง (Certified)</option>
+                                <option value="Reviewed">ตรวจสอบ (Reviewed)</option>
+                                <option value="Acknowledged">รับทราบ (Acknowledged)</option>
+                            </select>
+                            <span asp-validation-for="Purpose" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Department" class="form-label fw-semibold"></label>
+                            <input asp-for="Department" class="form-control" placeholder="เช่น IT, HR, Finance" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Remarks" class="form-label fw-semibold"></label>
+                            <input asp-for="Remarks" class="form-control" placeholder="หมายเหตุเพิ่มเติม (ถ้ามี)" />
+                        </div>
+
+                        <div class="col-12 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-pen"></i> ลงลายเซ็น
+                            </button>
+                            <a href="/" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> ยกเลิก
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

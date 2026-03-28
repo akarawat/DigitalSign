@@ -1,0 +1,62 @@
+@model List<DigitalSign.Web.Models.AuditRecord>
+@{
+    ViewData["Title"] = "รายละเอียด Audit";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0">
+        <i class="bi bi-clock-history"></i> Reference: @ViewBag.ReferenceId
+    </h4>
+    <a href="/Sign/Audit" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> กลับ
+    </a>
+</div>
+
+@if (Model == null || Model.Count == 0)
+{
+    <div class="alert alert-info">ไม่พบข้อมูล</div>
+}
+else
+{
+    @foreach (var r in Model)
+    {
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <small class="text-muted">ลงลายเซ็นโดย</small>
+                        <div class="fw-semibold">@r.SignedByUser</div>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted">วันที่/เวลา</small>
+                        <div class="fw-semibold">@r.SignedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</div>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted">สถานะ</small>
+                        <div>
+                            <span class="badge @(r.IsRevoked ? "bg-danger" : "bg-success")">
+                                @(r.IsRevoked ? "Revoked" : "Valid")
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted">วัตถุประสงค์</small>
+                        <div>@r.Purpose</div>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted">แผนก</small>
+                        <div>@r.Department</div>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted">ประเภท</small>
+                        <div><span class="badge bg-secondary">@r.SignatureType</span></div>
+                    </div>
+                    <div class="col-12">
+                        <small class="text-muted">Certificate</small>
+                        <div class="font-monospace small text-break">@r.SignedByCert</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+}
