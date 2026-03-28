@@ -7,7 +7,7 @@
     <div class="col-lg-8">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-danger text-white">
-                <h5 class="mb-0"><i class="bi bi-file-earmark-pdf-fill"></i> ลงลายเซ็นบนเอกสาร PDF</h5>
+                <h5 class="mb-0"><i class="bi bi-file-earmark-pdf-fill"></i> Sign PDF Document</h5>
             </div>
             <div class="card-body p-4">
                 <form asp-action="PdfSign" method="post" enctype="multipart/form-data">
@@ -16,46 +16,46 @@
 
                     <div class="row g-3">
                         <div class="col-12">
-                            <label asp-for="PdfFile" class="form-label fw-semibold"></label>
+                            <label asp-for="PdfFile" class="form-label fw-semibold">PDF File</label>
                             <input asp-for="PdfFile" type="file" accept=".pdf"
-                                   class="form-control" id="pdfFileInput" />
-                            <div class="form-text">รองรับเฉพาะไฟล์ .pdf ขนาดสูงสุด 50MB</div>
+                                   class="form-control" id="PdfFile" />
+                            <div class="form-text">Supported format: .pdf — Maximum size: 50MB</div>
                             <span asp-validation-for="PdfFile" class="text-danger small"></span>
                         </div>
 
                         <div class="col-md-6">
-                            <label asp-for="DocumentName" class="form-label fw-semibold"></label>
-                            <input asp-for="DocumentName" class="form-control"
-                                   placeholder="เช่น PurchaseOrder_2026" />
+                            <label asp-for="DocumentName" class="form-label fw-semibold">Document Name</label>
+                            <input asp-for="DocumentName" id="DocumentName" class="form-control"
+                                   placeholder="e.g. PurchaseOrder_2026" />
                             <span asp-validation-for="DocumentName" class="text-danger small"></span>
                         </div>
 
                         <div class="col-md-6">
-                            <label asp-for="ReferenceId" class="form-label fw-semibold"></label>
+                            <label asp-for="ReferenceId" class="form-label fw-semibold">Reference ID</label>
                             <input asp-for="ReferenceId" class="form-control"
-                                   placeholder="เช่น PO-2026-001" />
+                                   placeholder="e.g. PO-2026-001" />
                             <span asp-validation-for="ReferenceId" class="text-danger small"></span>
                         </div>
 
                         <div class="col-md-6">
-                            <label asp-for="Reason" class="form-label fw-semibold"></label>
+                            <label asp-for="Reason" class="form-label fw-semibold">Reason</label>
                             <select asp-for="Reason" class="form-select">
-                                <option value="Approved">อนุมัติ (Approved)</option>
-                                <option value="Certified">รับรอง (Certified)</option>
-                                <option value="Reviewed">ตรวจสอบ (Reviewed)</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Certified">Certified</option>
+                                <option value="Reviewed">Reviewed</option>
                             </select>
                         </div>
 
                         <div class="col-md-6">
-                            <label asp-for="Location" class="form-label fw-semibold"></label>
+                            <label asp-for="Location" class="form-label fw-semibold">Location</label>
                             <input asp-for="Location" class="form-control" />
                         </div>
 
                         <div class="col-12">
                             <div class="alert alert-info small mb-0">
                                 <i class="bi bi-info-circle"></i>
-                                ลายเซ็นจะถูกวางที่มุมล่างซ้ายของหน้า @Model.SignaturePage
-                                ขนาด @Model.SignatureWidth x @Model.SignatureHeight points
+                                Signature will be placed at the bottom-left of page @Model.SignaturePage
+                                — Size: @Model.SignatureWidth x @Model.SignatureHeight points
                             </div>
                         </div>
 
@@ -64,17 +64,17 @@
                                 <i class="bi bi-file-earmark-pen"></i> Sign PDF
                             </button>
                             <a href="/" class="btn btn-outline-secondary" id="btnCancel">
-                                <i class="bi bi-arrow-left"></i> ยกเลิก
+                                <i class="bi bi-arrow-left"></i> Cancel
                             </a>
                             <div id="signProgress" class="d-none ms-2">
                                 <div class="d-flex align-items-center gap-2 text-muted">
                                     <div class="spinner-border spinner-border-sm text-danger"></div>
-                                    <span>กำลัง Sign PDF... <span id="progressSec">0</span> วินาที</span>
+                                    <span>Signing PDF... <span id="progressSec">0</span>s</span>
                                 </div>
                                 <div class="progress mt-1" style="height:4px;width:200px">
                                     <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-danger" style="width:0%"></div>
                                 </div>
-                                <small class="text-muted">กระบวนการนี้ใช้เวลาประมาณ 10-15 วินาที</small>
+                                <small class="text-muted">This process takes approximately 10-15 seconds</small>
                             </div>
                         </div>
                     </div>
@@ -92,11 +92,10 @@ $('form').on('submit', function (e) {
     if (!fileInput || !fileInput.files || !fileInput.files.length) return;
 
     const btn = $('#btnSign');
-    btn.html('<i class="bi bi-hourglass-split"></i> กำลัง Sign...').prop('disabled', true);
+    btn.html('<i class="bi bi-hourglass-split"></i> Signing...').prop('disabled', true);
     $('#btnCancel').prop('disabled', true);
     $('#signProgress').removeClass('d-none');
 
-    // Progress timer
     let sec = 0;
     const maxSec = 120;
     const timer = setInterval(function () {
@@ -106,8 +105,17 @@ $('form').on('submit', function (e) {
         $('#progressBar').css('width', pct + '%');
     }, 1000);
 
-    // เก็บ timer ไว้ clear ถ้าจำเป็น
     window._signTimer = timer;
+});
+
+$('#PdfFile').on('change', function () {
+    const file = this.files[0];
+    if (!file) return;
+    $(this).next('.form-text').text('Selected: ' + file.name + ' (' + (file.size / 1024).toFixed(0) + ' KB)');
+    const docName = $('#DocumentName');
+    if (docName.length && !docName.val()) {
+        docName.val(file.name.replace(/\.pdf$/i, ''));
+    }
 });
 </script>
 }

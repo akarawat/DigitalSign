@@ -1,15 +1,15 @@
 @{
-    ViewData["Title"] = "หน้าหลัก";
+    ViewData["Title"] = "Home";
     var health = ViewBag.Health as DigitalSign.Web.Models.CertificateHealth;
 }
 
 <div class="row g-4">
     <div class="col-12">
         <h2 class="fw-bold"><i class="bi bi-pen"></i> BT Digital Sign</h2>
-        <p class="text-muted">ระบบลงลายเซ็นดิจิทัลสำหรับเอกสารภายใน Bernina Thailand</p>
+        <p class="text-muted">Digital Signature System for Bernina Thailand Internal Documents</p>
     </div>
 
-    <!-- สถานะระบบ -->
+    <!-- Certificate Status -->
     <div class="col-md-4">
         <div class="card h-100 border-0 shadow-sm">
             <div class="card-body">
@@ -20,31 +20,31 @@
                             @(health?.Status == "healthy" ? "text-success" : "text-danger")"></i>
                     </div>
                     <div>
-                        <h6 class="mb-0">สถานะ Certificate</h6>
+                        <h6 class="mb-0">Certificate Status</h6>
                         <span class="badge @(health?.Status == "healthy" ? "bg-success" : "bg-danger")">
-                            @(health?.Status ?? "ไม่สามารถเชื่อมต่อได้")
+                            @(health?.Status ?? "Unable to connect")
                         </span>
                     </div>
                 </div>
                 @if (health != null)
                 {
                     <small class="text-muted">
-                        หมดอายุ: @health.Expiry.ToString("dd/MM/yyyy")<br />
-                        เหลืออีก: @health.DaysRemaining วัน
+                        Expires: @health.Expiry.ToString("dd/MM/yyyy")<br />
+                        Remaining: @health.DaysRemaining days
                     </small>
                 }
             </div>
         </div>
     </div>
 
-    <!-- เมนูลัด -->
+    <!-- Quick Menu -->
     <div class="col-md-4">
         <a href="/Sign" class="text-decoration-none">
             <div class="card h-100 border-0 shadow-sm card-hover">
                 <div class="card-body text-center py-4">
                     <i class="bi bi-pen-fill fs-1 text-primary mb-3 d-block"></i>
-                    <h5 class="fw-semibold">Sign ข้อมูล</h5>
-                    <p class="text-muted small mb-0">ลงลายเซ็นดิจิทัลบนข้อมูลหรือข้อความ</p>
+                    <h5 class="fw-semibold">Sign Data</h5>
+                    <p class="text-muted small mb-0">Apply digital signature to text or data</p>
                 </div>
             </div>
         </a>
@@ -56,7 +56,7 @@
                 <div class="card-body text-center py-4">
                     <i class="bi bi-file-earmark-pdf-fill fs-1 text-danger mb-3 d-block"></i>
                     <h5 class="fw-semibold">Sign PDF</h5>
-                    <p class="text-muted small mb-0">ลงลายเซ็นดิจิทัลบนเอกสาร PDF</p>
+                    <p class="text-muted small mb-0">Apply digital signature to PDF documents</p>
                 </div>
             </div>
         </a>
@@ -67,8 +67,8 @@
             <div class="card h-100 border-0 shadow-sm card-hover">
                 <div class="card-body text-center py-4">
                     <i class="bi bi-patch-check-fill fs-1 text-success mb-3 d-block"></i>
-                    <h5 class="fw-semibold">ตรวจสอบลายเซ็น</h5>
-                    <p class="text-muted small mb-0">ตรวจสอบความถูกต้องของลายเซ็นดิจิทัล</p>
+                    <h5 class="fw-semibold">Verify Signature</h5>
+                    <p class="text-muted small mb-0">Verify the authenticity of a digital signature</p>
                 </div>
             </div>
         </a>
@@ -79,8 +79,8 @@
             <div class="card h-100 border-0 shadow-sm card-hover">
                 <div class="card-body text-center py-4">
                     <i class="bi bi-clock-history fs-1 text-warning mb-3 d-block"></i>
-                    <h5 class="fw-semibold">ประวัติการ Sign</h5>
-                    <p class="text-muted small mb-0">ดูประวัติการลงลายเซ็นทั้งหมด</p>
+                    <h5 class="fw-semibold">Sign History</h5>
+                    <p class="text-muted small mb-0">View all digital signature records</p>
                 </div>
             </div>
         </a>
@@ -90,7 +90,7 @@
     <div class="col-12">
         <div class="alert alert-info mb-0">
             <i class="bi bi-person-circle"></i>
-            ล็อกอินในชื่อ <strong>@ViewBag.User</strong> — ใช้ Windows SSO อัตโนมัติ
+            Logged in as <strong>@ViewBag.User</strong> — Windows SSO authenticated
         </div>
     </div>
 </div>

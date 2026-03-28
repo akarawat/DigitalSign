@@ -14,7 +14,7 @@ public class ApiResponse<T>
 // ── Sign Data ─────────────────────────────────────────────────────────────────
 public class SignRequest
 {
-    [Required, Display(Name = "ข้อมูลที่ต้องการ Sign")]
+    [Required, Display(Name = "Data to Sign")]
     public string DataToSign { get; set; } = string.Empty;
 
     [Required, Display(Name = "Reference ID")]
@@ -22,13 +22,13 @@ public class SignRequest
 
     public string? CertThumbprint { get; set; }
 
-    [Required, Display(Name = "วัตถุประสงค์")]
+    [Required, Display(Name = "Purpose")]
     public string Purpose { get; set; } = string.Empty;
 
-    [Display(Name = "แผนก")]
+    [Display(Name = "Department")]
     public string? Department { get; set; }
 
-    [Display(Name = "หมายเหตุ")]
+    [Display(Name = "Remarks")]
     public string? Remarks { get; set; }
 }
 
@@ -48,7 +48,7 @@ public class SignResult
 // ── Verify ────────────────────────────────────────────────────────────────────
 public class VerifyRequest
 {
-    [Required, Display(Name = "ข้อมูลต้นฉบับ")]
+    [Required, Display(Name = "Original Data")]
     public string OriginalData    { get; set; } = string.Empty;
 
     [Required, Display(Name = "Signature (Base64)")]
@@ -72,10 +72,10 @@ public class VerifyResult
 // ── PDF Sign ──────────────────────────────────────────────────────────────────
 public class PdfSignRequest
 {
-    [Required, Display(Name = "ไฟล์ PDF")]
+    [Required, Display(Name = "PDF File")]
     public IFormFile? PdfFile { get; set; }
 
-    [Required, Display(Name = "ชื่อเอกสาร")]
+    [Required, Display(Name = "Document Name")]
     public string DocumentName { get; set; } = string.Empty;
 
     [Required, Display(Name = "Reference ID")]
@@ -83,10 +83,10 @@ public class PdfSignRequest
 
     public string? CertThumbprint { get; set; }
 
-    [Display(Name = "เหตุผล")]
+    [Display(Name = "Reason")]
     public string Reason { get; set; } = "Approved";
 
-    [Display(Name = "สถานที่")]
+    [Display(Name = "Location")]
     public string Location { get; set; } = "Bangkok, Thailand";
 
     public int   SignaturePage   { get; set; } = 1;

@@ -13,7 +13,6 @@ public class SignController : Controller
         _signService = signService;
     }
 
-    // ── Sign Data ─────────────────────────────────────────────────────────────
     [HttpGet]
     public IActionResult Index() => View(new SignRequest());
 
@@ -22,15 +21,15 @@ public class SignController : Controller
     {
         if (!ModelState.IsValid) return View(model);
 
-        var result = await _signService.SignDataAsync(model);
+        var result = await _signService.SignDataAsync(model, GetShortUsername());
         if (result == null || !result.IsSuccess)
         {
-            ModelState.AddModelError("", result?.ErrorMessage ?? "ไม่สามารถ Sign ได้ กรุณาลองใหม่");
+            ModelState.AddModelError("", result?.ErrorMessage ?? "Unable to sign. Please try again.");
             return View(model);
         }
 
-        TempData["SignResult"]   = System.Text.Json.JsonSerializer.Serialize(result);
-        TempData["SuccessMsg"]   = "Sign สำเร็จแล้ว";
+        TempData["SignResult"] = System.Text.Json.JsonSerializer.Serialize(result);
+        TempData["SuccessMsg"] = "Signature applied successfully.";
         return RedirectToAction(nameof(SignResult));
     }
 
@@ -43,7 +42,6 @@ public class SignController : Controller
         return View(result);
     }
 
-    // ── Verify ────────────────────────────────────────────────────────────────
     [HttpGet]
     public IActionResult Verify() => View(new VerifyRequest());
 
@@ -51,13 +49,11 @@ public class SignController : Controller
     public async Task<IActionResult> Verify(VerifyRequest model)
     {
         if (!ModelState.IsValid) return View(model);
-
         var result = await _signService.VerifySignatureAsync(model);
         ViewBag.VerifyResult = result;
         return View(model);
     }
 
-    // ── PDF Sign ──────────────────────────────────────────────────────────────
     [HttpGet]
     public IActionResult PdfSign() => View(new PdfSignRequest());
 
@@ -67,32 +63,30 @@ public class SignController : Controller
         if (!ModelState.IsValid) return View(model);
         if (model.PdfFile == null || model.PdfFile.Length == 0)
         {
-            ModelState.AddModelError("PdfFile", "กรุณาเลือกไฟล์ PDF");
+            ModelState.AddModelError("PdfFile", "Please select a PDF file.");
             return View(model);
         }
 
-        // แปลง PDF → Base64
         using var ms = new MemoryStream();
         await model.PdfFile.CopyToAsync(ms);
         var pdfBase64 = Convert.ToBase64String(ms.ToArray());
 
         var result = await _signService.SignPdfAsync(
             pdfBase64, model.DocumentName, model.ReferenceId,
-            model.Reason, model.Location);
+            model.Reason, model.Location,
+            signerUsername: GetFullUsername());
 
         if (result == null || !result.IsSuccess)
         {
-            ModelState.AddModelError("", result?.ErrorMessage ?? "ไม่สามารถ Sign PDF ได้");
+            ModelState.AddModelError("", result?.ErrorMessage ?? "Unable to sign PDF.");
             return View(model);
         }
 
-        // Return signed PDF เป็น download
         var signedBytes = Convert.FromBase64String(result.PdfBase64);
-        var fileName    = $"signed_{model.DocumentName}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+        var fileName = $"signed_{model.DocumentName}_{DateTime.Now:yyyyMMddHHmmss}.pdf";
         return File(signedBytes, "application/pdf", fileName);
     }
 
-    // ── Audit Log ─────────────────────────────────────────────────────────────
     [HttpGet]
     public async Task<IActionResult> Audit(int page = 1)
     {
@@ -107,4 +101,15 @@ public class SignController : Controller
         ViewBag.ReferenceId = referenceId;
         return View(records);
     }
+
+    // ── username สั้น: BERNINATHAILAND\sakulchai.p → sakulchai.p
+    private string GetShortUsername()
+    {
+        var name = User.Identity?.Name ?? "unknown";
+        return name.Contains('\\') ? name.Split('\\').Last() : name;
+    }
+
+    // ── full username: BERNINATHAILAND\sakulchai.p
+    private string GetFullUsername()
+        => User.Identity?.Name ?? "unknown";
 }

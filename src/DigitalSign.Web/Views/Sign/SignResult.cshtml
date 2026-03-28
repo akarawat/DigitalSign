@@ -1,13 +1,13 @@
 @model DigitalSign.Web.Models.SignResult
 @{
-    ViewData["Title"] = "ผลการลงลายเซ็น";
+    ViewData["Title"] = "Sign Result";
 }
 
 <div class="row justify-content-center">
     <div class="col-lg-8">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-success text-white">
-                <h5 class="mb-0"><i class="bi bi-check-circle-fill"></i> ลงลายเซ็นสำเร็จ</h5>
+                <h5 class="mb-0"><i class="bi bi-check-circle-fill"></i> Signature Applied Successfully</h5>
             </div>
             <div class="card-body p-4">
                 <div class="row g-3">
@@ -16,15 +16,15 @@
                         <div class="fw-semibold">@Model?.ReferenceId</div>
                     </div>
                     <div class="col-md-6">
-                        <small class="text-muted">ลงลายเซ็นโดย</small>
+                        <small class="text-muted">Signed By</small>
                         <div class="fw-semibold">@Model?.SignedBy</div>
                     </div>
                     <div class="col-md-6">
-                        <small class="text-muted">วันที่/เวลา</small>
+                        <small class="text-muted">Date / Time</small>
                         <div class="fw-semibold">@Model?.SignedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</div>
                     </div>
                     <div class="col-md-6">
-                        <small class="text-muted">Certificate หมดอายุ</small>
+                        <small class="text-muted">Certificate Expires</small>
                         <div class="fw-semibold">@Model?.CertExpiry.ToLocalTime().ToString("dd/MM/yyyy")</div>
                     </div>
                     <div class="col-12">
@@ -49,30 +49,19 @@
 
                 <div class="d-flex gap-2 flex-wrap">
                     <a href="/Sign" class="btn btn-primary">
-                        <i class="bi bi-pen"></i> Sign ใหม่
+                        <i class="bi bi-pen"></i> Sign Again
                     </a>
                     <a href="/Sign/Verify" class="btn btn-outline-success">
-                        <i class="bi bi-patch-check"></i> ตรวจสอบลายเซ็น
+                        <i class="bi bi-patch-check"></i> Verify Signature
                     </a>
-                    <button class="btn btn-outline-secondary" onclick="copySignature()">
+                    <button class="btn btn-outline-secondary" onclick="copyToClipboard('@Model?.SignatureBase64')">
                         <i class="bi bi-clipboard"></i> Copy Signature
                     </button>
                     <a href="/" class="btn btn-outline-secondary">
-                        <i class="bi bi-house"></i> หน้าหลัก
+                        <i class="bi bi-house"></i> Home
                     </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-@section Scripts {
-<script>
-function copySignature() {
-    const sig = "@Model?.SignatureBase64";
-    navigator.clipboard.writeText(sig).then(() => {
-        alert("Copy Signature แล้ว!");
-    });
-}
-</script>
-}

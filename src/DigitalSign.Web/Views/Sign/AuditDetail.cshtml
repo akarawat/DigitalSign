@@ -1,6 +1,6 @@
 @model List<DigitalSign.Web.Models.AuditRecord>
 @{
-    ViewData["Title"] = "รายละเอียด Audit";
+    ViewData["Title"] = "Audit Detail";
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -8,13 +8,13 @@
         <i class="bi bi-clock-history"></i> Reference: @ViewBag.ReferenceId
     </h4>
     <a href="/Sign/Audit" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-arrow-left"></i> กลับ
+        <i class="bi bi-arrow-left"></i> Back
     </a>
 </div>
 
 @if (Model == null || Model.Count == 0)
 {
-    <div class="alert alert-info">ไม่พบข้อมูล</div>
+    <div class="alert alert-info">No records found.</div>
 }
 else
 {
@@ -24,15 +24,15 @@ else
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-4">
-                        <small class="text-muted">ลงลายเซ็นโดย</small>
+                        <small class="text-muted">Signed By</small>
                         <div class="fw-semibold">@r.SignedByUser</div>
                     </div>
                     <div class="col-md-4">
-                        <small class="text-muted">วันที่/เวลา</small>
+                        <small class="text-muted">Date / Time</small>
                         <div class="fw-semibold">@r.SignedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</div>
                     </div>
                     <div class="col-md-4">
-                        <small class="text-muted">สถานะ</small>
+                        <small class="text-muted">Status</small>
                         <div>
                             <span class="badge @(r.IsRevoked ? "bg-danger" : "bg-success")">
                                 @(r.IsRevoked ? "Revoked" : "Valid")
@@ -40,15 +40,15 @@ else
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <small class="text-muted">วัตถุประสงค์</small>
+                        <small class="text-muted">Purpose</small>
                         <div>@r.Purpose</div>
                     </div>
                     <div class="col-md-4">
-                        <small class="text-muted">แผนก</small>
+                        <small class="text-muted">Department</small>
                         <div>@r.Department</div>
                     </div>
                     <div class="col-md-4">
-                        <small class="text-muted">ประเภท</small>
+                        <small class="text-muted">Type</small>
                         <div><span class="badge bg-secondary">@r.SignatureType</span></div>
                     </div>
                     <div class="col-12">

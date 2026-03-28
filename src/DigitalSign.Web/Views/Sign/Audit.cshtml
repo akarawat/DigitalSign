@@ -1,19 +1,19 @@
 @model DigitalSign.Web.Models.AuditPagedResult
 @{
-    ViewData["Title"] = "ประวัติการ Sign";
+    ViewData["Title"] = "Sign History";
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h4 class="fw-bold mb-0"><i class="bi bi-clock-history"></i> ประวัติการลงลายเซ็น</h4>
+    <h4 class="fw-bold mb-0"><i class="bi bi-clock-history"></i> Digital Signature History</h4>
     <a href="/Sign" class="btn btn-primary btn-sm">
-        <i class="bi bi-pen"></i> Sign ใหม่
+        <i class="bi bi-pen"></i> New Signature
     </a>
 </div>
 
 @if (Model == null || Model.Records.Count == 0)
 {
     <div class="alert alert-info">
-        <i class="bi bi-info-circle"></i> ยังไม่มีประวัติการลงลายเซ็น
+        <i class="bi bi-info-circle"></i> No signature records found.
     </div>
 }
 else
@@ -25,11 +25,11 @@ else
                     <thead class="table-light">
                         <tr>
                             <th>Reference ID</th>
-                            <th>วัตถุประสงค์</th>
-                            <th>แผนก</th>
-                            <th>ประเภท</th>
-                            <th>วันที่/เวลา</th>
-                            <th>สถานะ</th>
+                            <th>Purpose</th>
+                            <th>Department</th>
+                            <th>Type</th>
+                            <th>Date / Time</th>
+                            <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -66,7 +66,6 @@ else
         </div>
     </div>
 
-    <!-- Pagination -->
     @if (Model.Pages > 1)
     {
         <nav class="mt-3">
@@ -82,6 +81,6 @@ else
     }
 
     <div class="text-muted small mt-2">
-        แสดง @Model.Records.Count รายการ จากทั้งหมด @Model.Total รายการ
+        Showing @Model.Records.Count of @Model.Total records
     </div>
 }

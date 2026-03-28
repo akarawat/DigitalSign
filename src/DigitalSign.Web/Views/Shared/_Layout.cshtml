@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -22,21 +22,21 @@
                     <li class="nav-item">
                         <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")"
                            href="/">
-                            <i class="bi bi-house"></i> หน้าหลัก
+                            <i class="bi bi-house"></i> Home
                         </a>
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle @(ViewContext.RouteData.Values["controller"]?.ToString() == "Sign" ? "active" : "")"
                            href="#" data-bs-toggle="dropdown">
-                            <i class="bi bi-pen-fill"></i> ลายเซ็นดิจิทัล
+                            <i class="bi bi-pen-fill"></i> Digital Signature
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/Sign">Sign ข้อมูล</a></li>
-                            <li><a class="dropdown-item" href="/Sign/Verify">ตรวจสอบลายเซ็น</a></li>
+                            <li><a class="dropdown-item" href="/Sign">Sign Data</a></li>
+                            <li><a class="dropdown-item" href="/Sign/Verify">Verify Signature</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="/Sign/PdfSign">Sign PDF</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/Sign/Audit">ประวัติการ Sign</a></li>
+                            <li><a class="dropdown-item" href="/Sign/Audit">Sign History</a></li>
                         </ul>
                     </li>
                 </ul>
