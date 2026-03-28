@@ -88,7 +88,8 @@
     <partial name="_ValidationScriptsPartial" />
 <script>
 $('form').on('submit', function (e) {
-    if (!$('#PdfFile')[0].files.length) return;
+    const fileInput = document.getElementById('PdfFile');
+    if (!fileInput || !fileInput.files || !fileInput.files.length) return;
 
     const btn = $('#btnSign');
     btn.html('<i class="bi bi-hourglass-split"></i> กำลัง Sign...').prop('disabled', true);
