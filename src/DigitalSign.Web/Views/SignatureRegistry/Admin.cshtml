@@ -1,0 +1,117 @@
+@model DigitalSign.Web.Models.SignatureRegistryListDto
+@{
+    ViewData["Title"] = "Signature Registry — Admin";
+    var apiBase = ViewContext.HttpContext.RequestServices
+        .GetRequiredService<IConfiguration>()["DigitalSignApi:BaseUrl"] ?? "";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold mb-0">
+        <i class="bi bi-people-fill"></i> Signature Registry Management
+    </h4>
+    <a href="/SignatureRegistry" class="btn btn-primary btn-sm">
+        <i class="bi bi-pencil-square"></i> My Signature
+    </a>
+</div>
+
+@if (Model == null || Model.Records.Count == 0)
+{
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> No signature registrations found.
+    </div>
+}
+else
+{
+    <div class="mb-3 text-muted small">
+        Showing @Model.Records.Count of @Model.Total records
+    </div>
+
+    <div class="row g-3">
+        @foreach (var r in Model.Records)
+        {
+            <div class="col-md-6 col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header @(r.IsApproved ? "bg-success" : "bg-warning") text-white py-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-semibold small">@r.SamAccountName</span>
+                            <span class="badge bg-white @(r.IsApproved ? "text-success" : "text-warning")">
+                                @(r.IsApproved ? "Approved" : "Pending")
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body p-3">
+                        <!-- Signature preview -->
+                        <div class="text-center border rounded p-2 bg-light mb-3"
+                             style="min-height:70px;">
+                            <img src="@apiBase/api/signature-registry/image/@r.SamAccountName"
+                                 alt="Signature"
+                                 class="img-fluid"
+                                 style="max-height:70px;"
+                                 onerror="this.parentElement.innerHTML='<span class=text-muted>No preview</span>'" />
+                        </div>
+
+                        <!-- Info -->
+                        <div class="small">
+                            <div class="fw-semibold">@r.FullNameEN</div>
+                            <div class="text-muted">@r.FullNameTH</div>
+                            <div class="mt-1">
+                                @if (!string.IsNullOrEmpty(r.Position))
+                                {
+                                    <span class="badge bg-light text-dark border me-1">@r.Position</span>
+                                }
+                                @if (!string.IsNullOrEmpty(r.Department))
+                                {
+                                    <span class="badge bg-light text-dark border">@r.Department</span>
+                                }
+                            </div>
+                            <div class="text-muted mt-1">
+                                Registered: @r.RegisteredAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                            </div>
+                            @if (r.IsApproved && r.ApprovedBy != null)
+                            {
+                                <div class="text-success">
+                                    ✓ Approved by @r.ApprovedBy
+                                </div>
+                            }
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 pt-0 pb-3 px-3">
+                        <div class="d-flex gap-2">
+                            @if (!r.IsApproved)
+                            {
+                                <form asp-action="Approve" asp-route-id="@r.Id" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-success btn-sm">
+                                        <i class="bi bi-check-circle"></i> Approve
+                                    </button>
+                                </form>
+                            }
+                            <form asp-action="Deactivate" asp-route-id="@r.Id" method="post" class="d-inline"
+                                  onsubmit="return confirm('Remove signature for @r.SamAccountName?')">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                    <i class="bi bi-trash"></i> Remove
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Pagination -->
+    @if (Model.Pages > 1)
+    {
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                @for (int i = 1; i <= Model.Pages; i++)
+                {
+                    <li class="page-item @(i == Model.Page ? "active" : "")">
+                        <a class="page-link" href="/SignatureRegistry/Admin?page=@i">@i</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    }
+}

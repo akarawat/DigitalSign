@@ -1,0 +1,228 @@
+@model DigitalSign.Web.Models.RegisterSignatureViewModel
+@{
+    ViewData["Title"] = "My Signature";
+    var existing = ViewBag.Existing as DigitalSign.Web.Models.SignatureRegistryDto;
+    var sam      = ViewBag.Sam as string;
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+
+        <!-- Current Signature -->
+        @if (existing != null)
+        {
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header @(existing.IsApproved ? "bg-success" : "bg-warning") text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-@(existing.IsApproved ? "patch-check-fill" : "clock")"></i>
+                        @(existing.IsApproved ? "Registered Signature — Active" : "Pending Admin Approval")
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3 align-items-center">
+                        <div class="col-md-4 text-center">
+                            <div class="border rounded p-3 bg-light">
+                                <img src="/SignatureRegistry/Image/@sam"
+                                     alt="My Signature"
+                                     class="img-fluid"
+                                     style="max-height:100px;"
+                                     onerror="this.src='/img/no-signature.png'" />
+                            </div>
+                            <small class="text-muted d-block mt-1">
+                                @(existing.ImageSizeBytes.HasValue
+                                    ? $"{existing.ImageSizeBytes / 1024} KB"
+                                    : "") — @existing.ImageFileName
+                            </small>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <small class="text-muted">Full Name (TH)</small>
+                                    <div class="fw-semibold">@existing.FullNameTH</div>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Full Name (EN)</small>
+                                    <div class="fw-semibold">@existing.FullNameEN</div>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Position</small>
+                                    <div>@(existing.Position ?? "-")</div>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Department</small>
+                                    <div>@(existing.Department ?? "-")</div>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Registered</small>
+                                    <div>@existing.RegisteredAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted">Approved By</small>
+                                    <div>@(existing.ApprovedBy ?? "-")</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Register / Update Form -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-pencil-square"></i>
+                    @(existing != null ? "Update Signature" : "Register Signature")
+                </h5>
+            </div>
+            <div class="card-body p-4">
+
+                @if (existing != null)
+                {
+                    <div class="alert alert-warning small">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Updating your signature will require admin re-approval.
+                    </div>
+                }
+
+                <form asp-action="Index" method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                    <div class="row g-3">
+                        <!-- Full Name TH -->
+                        <div class="col-md-6">
+                            <label asp-for="FullNameTH" class="form-label fw-semibold"></label>
+                            <input asp-for="FullNameTH" class="form-control"
+                                   placeholder="สกุลชัย ปานวิลัย"
+                                   value="@(existing?.FullNameTH ?? "")" />
+                            <span asp-validation-for="FullNameTH" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Full Name EN -->
+                        <div class="col-md-6">
+                            <label asp-for="FullNameEN" class="form-label fw-semibold"></label>
+                            <input asp-for="FullNameEN" class="form-control"
+                                   placeholder="Sakulchai Panwilai"
+                                   value="@(existing?.FullNameEN ?? "")" />
+                            <span asp-validation-for="FullNameEN" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Position -->
+                        <div class="col-md-6">
+                            <label asp-for="Position" class="form-label fw-semibold"></label>
+                            <input asp-for="Position" class="form-control"
+                                   placeholder="Senior IT Officer"
+                                   value="@(existing?.Position ?? "")" />
+                        </div>
+
+                        <!-- Department -->
+                        <div class="col-md-6">
+                            <label asp-for="Department" class="form-label fw-semibold"></label>
+                            <input asp-for="Department" class="form-control"
+                                   placeholder="Information Technology"
+                                   value="@(existing?.Department ?? "")" />
+                        </div>
+
+                        <!-- Email -->
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label fw-semibold"></label>
+                            <input asp-for="Email" class="form-control" type="email"
+                                   placeholder="sakulchai.p@berninathailand.com"
+                                   value="@(existing?.Email ?? "")" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Signature File -->
+                        <div class="col-12">
+                            <label asp-for="SignatureFile" class="form-label fw-semibold">
+                                Signature Image <span class="text-danger">*</span>
+                            </label>
+
+                            <!-- Tips -->
+                            <div class="alert alert-info small mb-2">
+                                <i class="bi bi-lightbulb"></i>
+                                <strong>Tips for best result:</strong>
+                                Sign on white paper → Scan or take photo → Crop tightly → Save as PNG
+                                <br>Recommended size: 400 x 150 px, Max: 2 MB, Format: PNG / JPG
+                            </div>
+
+                            <!-- Upload + Preview -->
+                            <div class="d-flex gap-3 align-items-start flex-wrap">
+                                <div>
+                                    <input asp-for="SignatureFile" type="file"
+                                           accept="image/png,image/jpeg,image/jpg"
+                                           class="form-control" id="sigFileInput"
+                                           style="max-width:350px" />
+                                    <div class="form-text" id="fileInfo">PNG or JPG, max 2 MB</div>
+                                    <span asp-validation-for="SignatureFile" class="text-danger small"></span>
+                                </div>
+
+                                <!-- Preview box -->
+                                <div class="border rounded p-2 bg-light text-center"
+                                     style="min-width:200px; min-height:80px;">
+                                    <img id="sigPreview" src="#" alt="Preview"
+                                         class="img-fluid d-none"
+                                         style="max-height:80px;" />
+                                    <span id="previewPlaceholder" class="text-muted small">
+                                        Preview will appear here
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit -->
+                        <div class="col-12 d-flex gap-2 align-items-center">
+                            <button type="submit" class="btn btn-primary" id="btnRegister">
+                                <i class="bi bi-check-circle"></i>
+                                @(existing != null ? "Update Signature" : "Register Signature")
+                            </button>
+                            <a href="/" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancel
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+<script>
+// Image preview
+document.getElementById('sigFileInput').addEventListener('change', function () {
+    const file = this.files[0];
+    if (!file) return;
+
+    // Validate size
+    if (file.size > 2 * 1024 * 1024) {
+        alert('File size exceeds 2 MB. Please choose a smaller file.');
+        this.value = '';
+        return;
+    }
+
+    document.getElementById('fileInfo').textContent =
+        `Selected: ${file.name} (${(file.size / 1024).toFixed(0)} KB)`;
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const preview = document.getElementById('sigPreview');
+        const placeholder = document.getElementById('previewPlaceholder');
+        preview.src = e.target.result;
+        preview.classList.remove('d-none');
+        placeholder.classList.add('d-none');
+    };
+    reader.readAsDataURL(file);
+});
+
+// Loading state on submit
+document.querySelector('form').addEventListener('submit', function () {
+    const btn = document.getElementById('btnRegister');
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
+    btn.disabled = true;
+});
+</script>
+}
