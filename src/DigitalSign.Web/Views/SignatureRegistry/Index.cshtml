@@ -8,13 +8,13 @@
 <div class="row justify-content-center">
     <div class="col-lg-8">
 
-        <!-- Current Signature -->
+        <!-- ── Current Signature ─────────────────────────────────────────── -->
         @if (existing != null)
         {
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header @(existing.IsApproved ? "bg-success" : "bg-warning") text-white">
                     <h5 class="mb-0">
-                        <i class="bi bi-@(existing.IsApproved ? "patch-check-fill" : "clock")"></i>
+                        <i class="bi bi-@(existing.IsApproved ? "patch-check-fill" : "clock-history")"></i>
                         @(existing.IsApproved ? "Registered Signature — Active" : "Pending Admin Approval")
                     </h5>
                 </div>
@@ -23,41 +23,38 @@
                         <div class="col-md-4 text-center">
                             <div class="border rounded p-3 bg-light">
                                 <img src="/SignatureRegistry/Image/@sam"
-                                     alt="My Signature"
-                                     class="img-fluid"
+                                     alt="My Signature" class="img-fluid"
                                      style="max-height:100px;"
-                                     onerror="this.src='/img/no-signature.png'" />
+                                     onerror="this.parentElement.innerHTML='<span class=text-muted small>No preview</span>'" />
                             </div>
                             <small class="text-muted d-block mt-1">
-                                @(existing.ImageSizeBytes.HasValue
-                                    ? $"{existing.ImageSizeBytes / 1024} KB"
-                                    : "") — @existing.ImageFileName
+                                @(existing.ImageSizeBytes.HasValue ? $"{existing.ImageSizeBytes / 1024} KB" : "")
                             </small>
                         </div>
                         <div class="col-md-8">
-                            <div class="row g-2">
+                            <div class="row g-2 small">
                                 <div class="col-6">
-                                    <small class="text-muted">Full Name (TH)</small>
+                                    <span class="text-muted">Full Name (TH)</span>
                                     <div class="fw-semibold">@existing.FullNameTH</div>
                                 </div>
                                 <div class="col-6">
-                                    <small class="text-muted">Full Name (EN)</small>
+                                    <span class="text-muted">Full Name (EN)</span>
                                     <div class="fw-semibold">@existing.FullNameEN</div>
                                 </div>
                                 <div class="col-6">
-                                    <small class="text-muted">Position</small>
+                                    <span class="text-muted">Position</span>
                                     <div>@(existing.Position ?? "-")</div>
                                 </div>
                                 <div class="col-6">
-                                    <small class="text-muted">Department</small>
+                                    <span class="text-muted">Department</span>
                                     <div>@(existing.Department ?? "-")</div>
                                 </div>
                                 <div class="col-6">
-                                    <small class="text-muted">Registered</small>
+                                    <span class="text-muted">Registered</span>
                                     <div>@existing.RegisteredAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
                                 </div>
                                 <div class="col-6">
-                                    <small class="text-muted">Approved By</small>
+                                    <span class="text-muted">Approved By</span>
                                     <div>@(existing.ApprovedBy ?? "-")</div>
                                 </div>
                             </div>
@@ -67,7 +64,7 @@
             </div>
         }
 
-        <!-- Register / Update Form -->
+        <!-- ── Register / Update Form ────────────────────────────────────── -->
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-primary text-white">
                 <h5 class="mb-0">
@@ -85,11 +82,14 @@
                     </div>
                 }
 
-                <form asp-action="Index" method="post" enctype="multipart/form-data">
+                <form asp-action="Index" method="post" enctype="multipart/form-data" id="regForm">
                     @Html.AntiForgeryToken()
+                    <!-- Hidden field รับ Base64 จาก canvas -->
+                    <input type="hidden" id="canvasDataInput" name="CanvasData" />
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
                     <div class="row g-3">
+
                         <!-- Full Name TH -->
                         <div class="col-md-6">
                             <label asp-for="FullNameTH" class="form-label fw-semibold"></label>
@@ -133,41 +133,107 @@
                             <span asp-validation-for="Email" class="text-danger small"></span>
                         </div>
 
-                        <!-- Signature File -->
+                        <!-- ── Signature Input ──────────────────────────────────────────── -->
                         <div class="col-12">
-                            <label asp-for="SignatureFile" class="form-label fw-semibold">
-                                Signature Image <span class="text-danger">*</span>
-                            </label>
+                            <label class="form-label fw-semibold">Signature <span class="text-danger">*</span></label>
 
-                            <!-- Tips -->
-                            <div class="alert alert-info small mb-2">
-                                <i class="bi bi-lightbulb"></i>
-                                <strong>Tips for best result:</strong>
-                                Sign on white paper → Scan or take photo → Crop tightly → Save as PNG
-                                <br>Recommended size: 400 x 150 px, Max: 2 MB, Format: PNG / JPG
-                            </div>
+                            <!-- Tab Toggle -->
+                            <ul class="nav nav-tabs mb-3" id="sigTabs">
+                                <li class="nav-item">
+                                    <button class="nav-link active" type="button"
+                                            data-bs-toggle="tab" data-bs-target="#tabDraw"
+                                            id="btnTabDraw">
+                                        <i class="bi bi-brush"></i> Draw Signature
+                                    </button>
+                                </li>
+                                <li class="nav-item">
+                                    <button class="nav-link" type="button"
+                                            data-bs-toggle="tab" data-bs-target="#tabUpload"
+                                            id="btnTabUpload">
+                                        <i class="bi bi-upload"></i> Upload Image
+                                    </button>
+                                </li>
+                            </ul>
 
-                            <!-- Upload + Preview -->
-                            <div class="d-flex gap-3 align-items-start flex-wrap">
-                                <div>
-                                    <input asp-for="SignatureFile" type="file"
-                                           accept="image/png,image/jpeg,image/jpg"
-                                           class="form-control" id="sigFileInput"
-                                           style="max-width:350px" />
-                                    <div class="form-text" id="fileInfo">PNG or JPG, max 2 MB</div>
-                                    <span asp-validation-for="SignatureFile" class="text-danger small"></span>
+                            <div class="tab-content">
+
+                                <!-- Tab: Draw -->
+                                <div class="tab-pane fade show active" id="tabDraw">
+                                    <div class="mb-2 d-flex gap-2 align-items-center flex-wrap">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                                                id="btnClearCanvas">
+                                            <i class="bi bi-eraser"></i> Clear
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                                                id="btnUndo">
+                                            <i class="bi bi-arrow-counterclockwise"></i> Undo
+                                        </button>
+
+                                        <!-- Pen size -->
+                                        <div class="d-flex align-items-center gap-1">
+                                            <i class="bi bi-pen text-muted small"></i>
+                                            <input type="range" id="penSize"
+                                                   min="1" max="8" value="2"
+                                                   class="form-range" style="width:80px" />
+                                        </div>
+
+                                        <!-- Pen color -->
+                                        <div class="d-flex align-items-center gap-1">
+                                            <i class="bi bi-palette text-muted small"></i>
+                                            <input type="color" id="penColor" value="#000000"
+                                                   class="form-control form-control-color"
+                                                   style="width:36px;height:36px;padding:2px" />
+                                        </div>
+
+                                        <span class="text-muted small ms-auto" id="canvasStatus">Draw your signature above</span>
+                                    </div>
+
+                                    <!-- Canvas -->
+                                    <div class="border rounded bg-white position-relative"
+                                         style="cursor:crosshair; touch-action:none;">
+                                        <canvas id="sigCanvas"
+                                                width="700" height="200"
+                                                style="width:100%;height:200px;display:block;border-radius:inherit;">
+                                        </canvas>
+                                        <div id="canvasPlaceholder"
+                                             class="position-absolute top-50 start-50 translate-middle text-muted"
+                                             style="pointer-events:none; font-size:1.1rem; opacity:0.4;">
+                                            ✍️ Sign here
+                                        </div>
+                                    </div>
+                                    <div class="form-text">
+                                        Use mouse or touch to draw. The signature will be saved as PNG.
+                                    </div>
                                 </div>
 
-                                <!-- Preview box -->
-                                <div class="border rounded p-2 bg-light text-center"
-                                     style="min-width:200px; min-height:80px;">
-                                    <img id="sigPreview" src="#" alt="Preview"
-                                         class="img-fluid d-none"
-                                         style="max-height:80px;" />
-                                    <span id="previewPlaceholder" class="text-muted small">
-                                        Preview will appear here
-                                    </span>
+                                <!-- Tab: Upload -->
+                                <div class="tab-pane fade" id="tabUpload">
+                                    <div class="alert alert-info small mb-2">
+                                        <i class="bi bi-lightbulb"></i>
+                                        Sign on white paper → Scan or take photo → Crop tightly → Save as PNG<br>
+                                        Recommended: 400×150 px, Max: 2 MB, Format: PNG / JPG
+                                    </div>
+                                    <div class="d-flex gap-3 align-items-start flex-wrap">
+                                        <div>
+                                            <input asp-for="SignatureFile" type="file"
+                                                   accept="image/png,image/jpeg"
+                                                   class="form-control" id="PdfFile"
+                                                   style="max-width:350px" />
+                                            <div class="form-text" id="fileInfo">PNG or JPG, max 2 MB</div>
+                                            <span asp-validation-for="SignatureFile" class="text-danger small"></span>
+                                        </div>
+                                        <!-- Upload preview -->
+                                        <div class="border rounded p-2 bg-light text-center"
+                                             style="min-width:200px;min-height:80px;">
+                                            <img id="uploadPreview" src="#" alt="Preview"
+                                                 class="img-fluid d-none" style="max-height:80px;" />
+                                            <span id="uploadPlaceholder" class="text-muted small">
+                                                Preview will appear here
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
+
                             </div>
                         </div>
 
@@ -181,8 +247,10 @@
                                 <i class="bi bi-arrow-left"></i> Cancel
                             </a>
                         </div>
+
                     </div>
                 </form>
+
             </div>
         </div>
 
@@ -190,16 +258,157 @@
 </div>
 
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+<partial name="_ValidationScriptsPartial" />
 <script>
-// Image preview
-document.getElementById('sigFileInput').addEventListener('change', function () {
+// ─────────────────────────────────────────────────────────────────────────────
+// Signature Canvas
+// ─────────────────────────────────────────────────────────────────────────────
+(function () {
+    const canvas      = document.getElementById('sigCanvas');
+    const ctx         = canvas.getContext('2d');
+    const placeholder = document.getElementById('canvasPlaceholder');
+    const status      = document.getElementById('canvasStatus');
+
+    let drawing   = false;
+    let lastX     = 0, lastY = 0;
+    let hasDrawn  = false;
+    const history = [];   // undo stack
+
+    // ── Setup canvas background ───────────────────────────────────────────────
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    function saveHistory() {
+        history.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+        if (history.length > 20) history.shift();
+    }
+
+    // ── Pen settings ──────────────────────────────────────────────────────────
+    function getPenSize()  { return document.getElementById('penSize').value; }
+    function getPenColor() { return document.getElementById('penColor').value; }
+
+    // ── Get position (mouse / touch) ──────────────────────────────────────────
+    function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width  / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const src = e.touches ? e.touches[0] : e;
+        return {
+            x: (src.clientX - rect.left) * scaleX,
+            y: (src.clientY - rect.top)  * scaleY
+        };
+    }
+
+    // ── Draw ──────────────────────────────────────────────────────────────────
+    function startDraw(e) {
+        e.preventDefault();
+        drawing = true;
+        const pos = getPos(e);
+        lastX = pos.x; lastY = pos.y;
+        saveHistory();
+    }
+
+    function draw(e) {
+        if (!drawing) return;
+        e.preventDefault();
+
+        const pos = getPos(e);
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.strokeStyle = getPenColor();
+        ctx.lineWidth   = getPenSize();
+        ctx.lineCap     = 'round';
+        ctx.lineJoin    = 'round';
+        ctx.stroke();
+
+        lastX = pos.x; lastY = pos.y;
+
+        if (!hasDrawn) {
+            hasDrawn = true;
+            placeholder.style.display = 'none';
+            status.textContent = '✓ Signature drawn';
+        }
+    }
+
+    function stopDraw(e) {
+        drawing = false;
+    }
+
+    // ── Mouse events ──────────────────────────────────────────────────────────
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup',   stopDraw);
+    canvas.addEventListener('mouseleave', stopDraw);
+
+    // ── Touch events (mobile / tablet) ────────────────────────────────────────
+    canvas.addEventListener('touchstart', startDraw, { passive: false });
+    canvas.addEventListener('touchmove',  draw,      { passive: false });
+    canvas.addEventListener('touchend',   stopDraw);
+
+    // ── Clear ─────────────────────────────────────────────────────────────────
+    document.getElementById('btnClearCanvas').addEventListener('click', function () {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        hasDrawn = false;
+        placeholder.style.display = '';
+        status.textContent = 'Draw your signature above';
+        history.length = 0;
+    });
+
+    // ── Undo ──────────────────────────────────────────────────────────────────
+    document.getElementById('btnUndo').addEventListener('click', function () {
+        if (history.length > 0) {
+            ctx.putImageData(history.pop(), 0, 0);
+            if (history.length === 0) {
+                hasDrawn = false;
+                placeholder.style.display = '';
+                status.textContent = 'Draw your signature above';
+            }
+        }
+    });
+
+    // ── Form Submit — ฝัง canvas data ─────────────────────────────────────────
+    document.getElementById('regForm').addEventListener('submit', function (e) {
+        const activeTab = document.querySelector('#sigTabs .nav-link.active').id;
+
+        if (activeTab === 'btnTabDraw') {
+            if (!hasDrawn) {
+                e.preventDefault();
+                alert('Please draw your signature before submitting.');
+                return;
+            }
+            // ส่ง canvas เป็น Base64 PNG
+            document.getElementById('canvasDataInput').value =
+                canvas.toDataURL('image/png');
+        }
+
+        // Loading state
+        const btn = document.getElementById('btnRegister');
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
+        btn.disabled = true;
+    });
+
+    // ── Tab switch — ล้าง validation ──────────────────────────────────────────
+    document.querySelectorAll('#sigTabs .nav-link').forEach(function (tab) {
+        tab.addEventListener('click', function () {
+            // ถ้าสลับไปอัปโหลด ล้าง canvas data
+            if (this.id === 'btnTabUpload') {
+                document.getElementById('canvasDataInput').value = '';
+            }
+        });
+    });
+})();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Upload Preview
+// ─────────────────────────────────────────────────────────────────────────────
+document.getElementById('PdfFile')?.addEventListener('change', function () {
     const file = this.files[0];
     if (!file) return;
 
-    // Validate size
     if (file.size > 2 * 1024 * 1024) {
-        alert('File size exceeds 2 MB. Please choose a smaller file.');
+        alert('File size exceeds 2 MB.');
         this.value = '';
         return;
     }
@@ -209,20 +418,12 @@ document.getElementById('sigFileInput').addEventListener('change', function () {
 
     const reader = new FileReader();
     reader.onload = function (e) {
-        const preview = document.getElementById('sigPreview');
-        const placeholder = document.getElementById('previewPlaceholder');
+        const preview = document.getElementById('uploadPreview');
         preview.src = e.target.result;
         preview.classList.remove('d-none');
-        placeholder.classList.add('d-none');
+        document.getElementById('uploadPlaceholder').classList.add('d-none');
     };
     reader.readAsDataURL(file);
-});
-
-// Loading state on submit
-document.querySelector('form').addEventListener('submit', function () {
-    const btn = document.getElementById('btnRegister');
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
-    btn.disabled = true;
 });
 </script>
 }

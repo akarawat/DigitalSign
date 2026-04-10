@@ -39,6 +39,27 @@
                             <li><a class="dropdown-item" href="/Sign/Audit">Sign History</a></li>
                         </ul>
                     </li>
+                    <!-- Signature Registry ← เพิ่มใหม่ -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle @(ViewContext.RouteData.Values["controller"]?.ToString() == "SignatureRegistry" ? "active" : "")"
+                           href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-vcard-fill"></i> Signature Registry
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="/SignatureRegistry">
+                                    <i class="bi bi-pencil-square text-primary"></i> My Signature
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item" href="/SignatureRegistry/Admin">
+                                    <i class="bi bi-people-fill text-secondary"></i> Admin — Manage
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
                 </ul>
                 <span class="navbar-text text-white">
                     <i class="bi bi-person-circle"></i>
