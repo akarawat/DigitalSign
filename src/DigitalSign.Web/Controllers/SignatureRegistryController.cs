@@ -23,15 +23,30 @@ public class SignatureRegistryController : Controller
     }
 
     // ── Named Client "DigitalSignApi" มี X-Api-Key ใน Header อยู่แล้ว ─────────
-    // เพิ่ม X-Sam-Account ของ user ปัจจุบันด้วย
-    private HttpClient CreateClient()
+    private HttpClient GetApiClient()
+        => _httpFactory.CreateClient("DigitalSignApi");
+
+    // ── สร้าง HttpRequestMessage พร้อม X-Sam-Account ─────────────────────────
+    // ใช้ request-level header แทน client-level เพื่อ thread-safe
+    private HttpRequestMessage CreateRequest(HttpMethod method, string url)
     {
-        var client = _httpFactory.CreateClient("DigitalSignApi");
-        // ส่ง SAM account ของ user ที่ login ไปให้ API ทุก request
-        client.DefaultRequestHeaders.Remove("X-Sam-Account");
-        client.DefaultRequestHeaders.Add("X-Sam-Account", GetSam());
-        return client;
+        var req = new HttpRequestMessage(method, url);
+        req.Headers.Add("X-Sam-Account", GetSam());
+        return req;
     }
+
+    private async Task<HttpResponseMessage> GetAsync(string url)
+        => await GetApiClient().SendAsync(CreateRequest(HttpMethod.Get, url));
+
+    private async Task<HttpResponseMessage> PostAsync(string url, HttpContent? content = null)
+    {
+        var req = CreateRequest(HttpMethod.Post, url);
+        req.Content = content;
+        return await GetApiClient().SendAsync(req);
+    }
+
+    private async Task<HttpResponseMessage> DeleteAsync(string url)
+        => await GetApiClient().SendAsync(CreateRequest(HttpMethod.Delete, url));
 
     private string GetSam()
     {
@@ -45,7 +60,7 @@ public class SignatureRegistryController : Controller
     {
         try
         {
-            var resp = await CreateClient().GetAsync("api/signature-registry/me");
+            var resp = await GetAsync("api/signature-registry/me");
             var body = await resp.Content.ReadAsStringAsync();
 
             if (resp.IsSuccessStatusCode)
@@ -134,7 +149,7 @@ public class SignatureRegistryController : Controller
                 new System.Net.Http.Headers.MediaTypeHeaderValue(imageMimeType);
             form.Add(fc, "SignatureFile", imageFileName);
 
-            var resp = await CreateClient().PostAsync("api/signature-registry/register", form);
+            var resp = await PostAsync("api/signature-registry/register", form);
             var body = await resp.Content.ReadAsStringAsync();
 
             _logger.LogInformation("Register API: {S} | {B}",
@@ -167,13 +182,12 @@ public class SignatureRegistryController : Controller
 
     // ── GET /SignatureRegistry/Image/{sam} ────────────────────────────────────
     [HttpGet]
-    public async Task<IActionResult> Image(string samAccount)
+    public async Task<IActionResult> Image(string id)
     {
         try
         {
-            // Image endpoint ไม่ต้องการ X-Sam-Account
             var client = _httpFactory.CreateClient("DigitalSignApi");
-            var resp = await client.GetAsync($"api/signature-registry/image/{samAccount}");
+            var resp = await client.GetAsync($"api/signature-registry/image/{id}");
             if (!resp.IsSuccessStatusCode) return NotFound();
             var bytes = await resp.Content.ReadAsByteArrayAsync();
             return File(bytes, resp.Content.Headers.ContentType?.ToString() ?? "image/png");
@@ -187,8 +201,7 @@ public class SignatureRegistryController : Controller
     {
         try
         {
-            var resp = await CreateClient().GetAsync(
-                $"api/signature-registry/admin/list?page={page}&pageSize=20");
+            var resp = await GetAsync($"api/signature-registry/admin/list?page={page}&pageSize=20");
             var body = await resp.Content.ReadAsStringAsync();
             var result = JsonSerializer.Deserialize<ApiResponse<SignatureRegistryListDto>>(body, _json);
             return View(result?.Data);
@@ -204,8 +217,7 @@ public class SignatureRegistryController : Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Approve(long id)
     {
-        var resp = await CreateClient().PostAsync(
-            $"api/signature-registry/admin/{id}/approve", null);
+        var resp = await PostAsync($"api/signature-registry/admin/{id}/approve");
         TempData[resp.IsSuccessStatusCode ? "SuccessMsg" : "ErrorMsg"] =
             resp.IsSuccessStatusCode ? "Signature approved." : "Approval failed.";
         return RedirectToAction(nameof(Admin));
@@ -215,8 +227,7 @@ public class SignatureRegistryController : Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> Deactivate(long id)
     {
-        var resp = await CreateClient().DeleteAsync(
-            $"api/signature-registry/admin/{id}");
+        var resp = await DeleteAsync($"api/signature-registry/admin/{id}");
         TempData[resp.IsSuccessStatusCode ? "SuccessMsg" : "ErrorMsg"] =
             resp.IsSuccessStatusCode ? "Signature removed." : "Remove failed.";
         return RedirectToAction(nameof(Admin));
@@ -227,7 +238,7 @@ public class SignatureRegistryController : Controller
     {
         try
         {
-            var resp = await CreateClient().GetAsync("api/signature-registry/me");
+            var resp = await GetAsync("api/signature-registry/me");
             if (resp.IsSuccessStatusCode)
             {
                 var body = await resp.Content.ReadAsStringAsync();
