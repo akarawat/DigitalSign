@@ -1,8 +1,6 @@
 @model DigitalSign.Web.Models.SignatureRegistryListDto
 @{
     ViewData["Title"] = "Signature Registry — Admin";
-    var apiBase = ViewContext.HttpContext.RequestServices
-        .GetRequiredService<IConfiguration>()["DigitalSignApi:BaseUrl"] ?? "";
 }
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -40,17 +38,20 @@ else
                         </div>
                     </div>
                     <div class="card-body p-3">
-                        <!-- Signature preview -->
+
+                        <!-- ── Signature Preview ─────────────────────────────── -->
+                        <!-- ใช้ Web proxy route แทน API URL โดยตรง            -->
+                        <!-- เพื่อให้ X-Api-Key ถูกส่งไปโดย Server แทน Browser -->
                         <div class="text-center border rounded p-2 bg-light mb-3"
                              style="min-height:70px;">
-                            <img src="@apiBase/api/signature-registry/image/@r.SamAccountName"
-                                 alt="Signature"
+                            <img src="/SignatureRegistry/Image/@r.SamAccountName"
+                                 alt="Signature of @r.SamAccountName"
                                  class="img-fluid"
                                  style="max-height:70px;"
-                                 onerror="this.parentElement.innerHTML='<span class=text-muted>No preview</span>'" />
+                                 onerror="this.parentElement.innerHTML='<span class=\'text-muted small\'>No preview</span>'" />
                         </div>
 
-                        <!-- Info -->
+                        <!-- ── Info ────────────────────────────────────────── -->
                         <div class="small">
                             <div class="fw-semibold">@r.FullNameEN</div>
                             <div class="text-muted">@r.FullNameTH</div>
@@ -69,24 +70,28 @@ else
                             </div>
                             @if (r.IsApproved && r.ApprovedBy != null)
                             {
-                                <div class="text-success">
-                                    ✓ Approved by @r.ApprovedBy
+                                <div class="text-success small">
+                                    <i class="bi bi-check-circle"></i> Approved by @r.ApprovedBy
                                 </div>
                             }
                         </div>
                     </div>
+
+                    <!-- ── Actions ────────────────────────────────────────── -->
                     <div class="card-footer bg-transparent border-0 pt-0 pb-3 px-3">
                         <div class="d-flex gap-2">
                             @if (!r.IsApproved)
                             {
-                                <form asp-action="Approve" asp-route-id="@r.Id" method="post" class="d-inline">
+                                <form asp-action="Approve" asp-route-id="@r.Id"
+                                      method="post" class="d-inline">
                                     @Html.AntiForgeryToken()
                                     <button type="submit" class="btn btn-success btn-sm">
                                         <i class="bi bi-check-circle"></i> Approve
                                     </button>
                                 </form>
                             }
-                            <form asp-action="Deactivate" asp-route-id="@r.Id" method="post" class="d-inline"
+                            <form asp-action="Deactivate" asp-route-id="@r.Id"
+                                  method="post" class="d-inline"
                                   onsubmit="return confirm('Remove signature for @r.SamAccountName?')">
                                 @Html.AntiForgeryToken()
                                 <button type="submit" class="btn btn-outline-danger btn-sm">

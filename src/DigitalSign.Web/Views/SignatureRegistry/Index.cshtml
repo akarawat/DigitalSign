@@ -2,7 +2,7 @@
 @{
     ViewData["Title"] = "My Signature";
     var existing = ViewBag.Existing as DigitalSign.Web.Models.SignatureRegistryDto;
-    var sam      = ViewBag.Sam as string;
+    var sam = ViewBag.Sam as string;
 }
 
 <div class="row justify-content-center">
@@ -22,10 +22,16 @@
                     <div class="row g-3 align-items-center">
                         <div class="col-md-4 text-center">
                             <div class="border rounded p-3 bg-light">
-                                <img src="/SignatureRegistry/Image/@sam"
-                                     alt="My Signature" class="img-fluid"
-                                     style="max-height:100px;"
-                                     onerror="this.parentElement.innerHTML='<span class=text-muted small>No preview</span>'" />
+                                @if (!string.IsNullOrEmpty(existing.SignatureImageBase64))
+                                {
+                                    <img src="data:@existing.ImageMimeType;base64,@existing.SignatureImageBase64"
+                                         alt="My Signature" class="img-fluid"
+                                         style="max-height:100px;" />
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">No preview</span>
+                                }
                             </div>
                             <small class="text-muted d-block mt-1">
                                 @(existing.ImageSizeBytes.HasValue ? $"{existing.ImageSizeBytes / 1024} KB" : "")
@@ -258,172 +264,172 @@
 </div>
 
 @section Scripts {
-<partial name="_ValidationScriptsPartial" />
-<script>
-// ─────────────────────────────────────────────────────────────────────────────
-// Signature Canvas
-// ─────────────────────────────────────────────────────────────────────────────
-(function () {
-    const canvas      = document.getElementById('sigCanvas');
-    const ctx         = canvas.getContext('2d');
-    const placeholder = document.getElementById('canvasPlaceholder');
-    const status      = document.getElementById('canvasStatus');
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // ─────────────────────────────────────────────────────────────────────────────
+        // Signature Canvas
+        // ─────────────────────────────────────────────────────────────────────────────
+        (function () {
+            const canvas      = document.getElementById('sigCanvas');
+            const ctx         = canvas.getContext('2d');
+            const placeholder = document.getElementById('canvasPlaceholder');
+            const status      = document.getElementById('canvasStatus');
 
-    let drawing   = false;
-    let lastX     = 0, lastY = 0;
-    let hasDrawn  = false;
-    const history = [];   // undo stack
+            let drawing   = false;
+            let lastX     = 0, lastY = 0;
+            let hasDrawn  = false;
+            const history = [];   // undo stack
 
-    // ── Setup canvas background ───────────────────────────────────────────────
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // ── Setup canvas background ───────────────────────────────────────────────
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    function saveHistory() {
-        history.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
-        if (history.length > 20) history.shift();
-    }
+            function saveHistory() {
+                history.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+                if (history.length > 20) history.shift();
+            }
 
-    // ── Pen settings ──────────────────────────────────────────────────────────
-    function getPenSize()  { return document.getElementById('penSize').value; }
-    function getPenColor() { return document.getElementById('penColor').value; }
+            // ── Pen settings ──────────────────────────────────────────────────────────
+            function getPenSize()  { return document.getElementById('penSize').value; }
+            function getPenColor() { return document.getElementById('penColor').value; }
 
-    // ── Get position (mouse / touch) ──────────────────────────────────────────
-    function getPos(e) {
-        const rect = canvas.getBoundingClientRect();
-        const scaleX = canvas.width  / rect.width;
-        const scaleY = canvas.height / rect.height;
-        const src = e.touches ? e.touches[0] : e;
-        return {
-            x: (src.clientX - rect.left) * scaleX,
-            y: (src.clientY - rect.top)  * scaleY
-        };
-    }
+            // ── Get position (mouse / touch) ──────────────────────────────────────────
+            function getPos(e) {
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width  / rect.width;
+                const scaleY = canvas.height / rect.height;
+                const src = e.touches ? e.touches[0] : e;
+                return {
+                    x: (src.clientX - rect.left) * scaleX,
+                    y: (src.clientY - rect.top)  * scaleY
+                };
+            }
 
-    // ── Draw ──────────────────────────────────────────────────────────────────
-    function startDraw(e) {
-        e.preventDefault();
-        drawing = true;
-        const pos = getPos(e);
-        lastX = pos.x; lastY = pos.y;
-        saveHistory();
-    }
+            // ── Draw ──────────────────────────────────────────────────────────────────
+            function startDraw(e) {
+                e.preventDefault();
+                drawing = true;
+                const pos = getPos(e);
+                lastX = pos.x; lastY = pos.y;
+                saveHistory();
+            }
 
-    function draw(e) {
-        if (!drawing) return;
-        e.preventDefault();
+            function draw(e) {
+                if (!drawing) return;
+                e.preventDefault();
 
-        const pos = getPos(e);
-        ctx.beginPath();
-        ctx.moveTo(lastX, lastY);
-        ctx.lineTo(pos.x, pos.y);
-        ctx.strokeStyle = getPenColor();
-        ctx.lineWidth   = getPenSize();
-        ctx.lineCap     = 'round';
-        ctx.lineJoin    = 'round';
-        ctx.stroke();
+                const pos = getPos(e);
+                ctx.beginPath();
+                ctx.moveTo(lastX, lastY);
+                ctx.lineTo(pos.x, pos.y);
+                ctx.strokeStyle = getPenColor();
+                ctx.lineWidth   = getPenSize();
+                ctx.lineCap     = 'round';
+                ctx.lineJoin    = 'round';
+                ctx.stroke();
 
-        lastX = pos.x; lastY = pos.y;
+                lastX = pos.x; lastY = pos.y;
 
-        if (!hasDrawn) {
-            hasDrawn = true;
-            placeholder.style.display = 'none';
-            status.textContent = '✓ Signature drawn';
-        }
-    }
+                if (!hasDrawn) {
+                    hasDrawn = true;
+                    placeholder.style.display = 'none';
+                    status.textContent = '✓ Signature drawn';
+                }
+            }
 
-    function stopDraw(e) {
-        drawing = false;
-    }
+            function stopDraw(e) {
+                drawing = false;
+            }
 
-    // ── Mouse events ──────────────────────────────────────────────────────────
-    canvas.addEventListener('mousedown', startDraw);
-    canvas.addEventListener('mousemove', draw);
-    canvas.addEventListener('mouseup',   stopDraw);
-    canvas.addEventListener('mouseleave', stopDraw);
+            // ── Mouse events ──────────────────────────────────────────────────────────
+            canvas.addEventListener('mousedown', startDraw);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup',   stopDraw);
+            canvas.addEventListener('mouseleave', stopDraw);
 
-    // ── Touch events (mobile / tablet) ────────────────────────────────────────
-    canvas.addEventListener('touchstart', startDraw, { passive: false });
-    canvas.addEventListener('touchmove',  draw,      { passive: false });
-    canvas.addEventListener('touchend',   stopDraw);
+            // ── Touch events (mobile / tablet) ────────────────────────────────────────
+            canvas.addEventListener('touchstart', startDraw, { passive: false });
+            canvas.addEventListener('touchmove',  draw,      { passive: false });
+            canvas.addEventListener('touchend',   stopDraw);
 
-    // ── Clear ─────────────────────────────────────────────────────────────────
-    document.getElementById('btnClearCanvas').addEventListener('click', function () {
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        hasDrawn = false;
-        placeholder.style.display = '';
-        status.textContent = 'Draw your signature above';
-        history.length = 0;
-    });
-
-    // ── Undo ──────────────────────────────────────────────────────────────────
-    document.getElementById('btnUndo').addEventListener('click', function () {
-        if (history.length > 0) {
-            ctx.putImageData(history.pop(), 0, 0);
-            if (history.length === 0) {
+            // ── Clear ─────────────────────────────────────────────────────────────────
+            document.getElementById('btnClearCanvas').addEventListener('click', function () {
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
                 hasDrawn = false;
                 placeholder.style.display = '';
                 status.textContent = 'Draw your signature above';
-            }
-        }
-    });
+                history.length = 0;
+            });
 
-    // ── Form Submit — ฝัง canvas data ─────────────────────────────────────────
-    document.getElementById('regForm').addEventListener('submit', function (e) {
-        const activeTab = document.querySelector('#sigTabs .nav-link.active').id;
+            // ── Undo ──────────────────────────────────────────────────────────────────
+            document.getElementById('btnUndo').addEventListener('click', function () {
+                if (history.length > 0) {
+                    ctx.putImageData(history.pop(), 0, 0);
+                    if (history.length === 0) {
+                        hasDrawn = false;
+                        placeholder.style.display = '';
+                        status.textContent = 'Draw your signature above';
+                    }
+                }
+            });
 
-        if (activeTab === 'btnTabDraw') {
-            if (!hasDrawn) {
-                e.preventDefault();
-                alert('Please draw your signature before submitting.');
+            // ── Form Submit — ฝัง canvas data ─────────────────────────────────────────
+            document.getElementById('regForm').addEventListener('submit', function (e) {
+                const activeTab = document.querySelector('#sigTabs .nav-link.active').id;
+
+                if (activeTab === 'btnTabDraw') {
+                    if (!hasDrawn) {
+                        e.preventDefault();
+                        alert('Please draw your signature before submitting.');
+                        return;
+                    }
+                    // ส่ง canvas เป็น Base64 PNG
+                    document.getElementById('canvasDataInput').value =
+                        canvas.toDataURL('image/png');
+                }
+
+                // Loading state
+                const btn = document.getElementById('btnRegister');
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
+                btn.disabled = true;
+            });
+
+            // ── Tab switch — ล้าง validation ──────────────────────────────────────────
+            document.querySelectorAll('#sigTabs .nav-link').forEach(function (tab) {
+                tab.addEventListener('click', function () {
+                    // ถ้าสลับไปอัปโหลด ล้าง canvas data
+                    if (this.id === 'btnTabUpload') {
+                        document.getElementById('canvasDataInput').value = '';
+                    }
+                });
+            });
+        })();
+
+        // ─────────────────────────────────────────────────────────────────────────────
+        // Upload Preview
+        // ─────────────────────────────────────────────────────────────────────────────
+        document.getElementById('PdfFile')?.addEventListener('change', function () {
+            const file = this.files[0];
+            if (!file) return;
+
+            if (file.size > 2 * 1024 * 1024) {
+                alert('File size exceeds 2 MB.');
+                this.value = '';
                 return;
             }
-            // ส่ง canvas เป็น Base64 PNG
-            document.getElementById('canvasDataInput').value =
-                canvas.toDataURL('image/png');
-        }
 
-        // Loading state
-        const btn = document.getElementById('btnRegister');
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
-        btn.disabled = true;
-    });
+            document.getElementById('fileInfo').textContent =
+                `Selected: ${file.name} (${(file.size / 1024).toFixed(0)} KB)`;
 
-    // ── Tab switch — ล้าง validation ──────────────────────────────────────────
-    document.querySelectorAll('#sigTabs .nav-link').forEach(function (tab) {
-        tab.addEventListener('click', function () {
-            // ถ้าสลับไปอัปโหลด ล้าง canvas data
-            if (this.id === 'btnTabUpload') {
-                document.getElementById('canvasDataInput').value = '';
-            }
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const preview = document.getElementById('uploadPreview');
+                preview.src = e.target.result;
+                preview.classList.remove('d-none');
+                document.getElementById('uploadPlaceholder').classList.add('d-none');
+            };
+            reader.readAsDataURL(file);
         });
-    });
-})();
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Upload Preview
-// ─────────────────────────────────────────────────────────────────────────────
-document.getElementById('PdfFile')?.addEventListener('change', function () {
-    const file = this.files[0];
-    if (!file) return;
-
-    if (file.size > 2 * 1024 * 1024) {
-        alert('File size exceeds 2 MB.');
-        this.value = '';
-        return;
-    }
-
-    document.getElementById('fileInfo').textContent =
-        `Selected: ${file.name} (${(file.size / 1024).toFixed(0)} KB)`;
-
-    const reader = new FileReader();
-    reader.onload = function (e) {
-        const preview = document.getElementById('uploadPreview');
-        preview.src = e.target.result;
-        preview.classList.remove('d-none');
-        document.getElementById('uploadPlaceholder').classList.add('d-none');
-    };
-    reader.readAsDataURL(file);
-});
-</script>
+    </script>
 }

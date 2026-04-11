@@ -21,17 +21,36 @@ builder.Services.AddAuthorizationBuilder()
         .RequireAuthenticatedUser()
         .Build());
 
-// ── HttpClient สำหรับ Digital Sign API ───────────────────────────────────────
+// ── Typed HttpClient: IDigitalSignService (Sign/Verify/PDF) ──────────────────
 builder.Services.AddHttpClient<IDigitalSignService, DigitalSignService>(client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["DigitalSignApi:BaseUrl"]!);
-    client.Timeout     = TimeSpan.FromSeconds(120);
+    client.Timeout = TimeSpan.FromSeconds(120);
 })
 .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
 {
     UseDefaultCredentials = true,
-    PreAuthenticate       = true  // ส่ง credential ทันที ไม่ต้อง challenge 2 รอบ
+    PreAuthenticate = true
 });
+
+// ── Named HttpClient: "DigitalSignApi" สำหรับ SignatureRegistry ───────────────
+// ใช้ API Key แทน Windows Auth — แก้ Double-Hop Problem
+builder.Services.AddHttpClient("DigitalSignApi", (serviceProvider, client) =>
+{
+    // อ่าน config ผ่าน serviceProvider — วิธีที่ถูกต้องสำหรับ Named Client
+    var config = serviceProvider.GetRequiredService<IConfiguration>();
+    var baseUrl = config["DigitalSignApi:BaseUrl"]
+        ?? throw new InvalidOperationException("DigitalSignApi:BaseUrl is not configured.");
+    var apiKey = config["DigitalSignApi:ApiKey"]
+        ?? throw new InvalidOperationException("DigitalSignApi:ApiKey is not configured.");
+
+    client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
+    client.Timeout = TimeSpan.FromSeconds(60);
+
+    // ── X-Api-Key ติดมากับทุก request อัตโนมัติ ──────────────────────────────
+    client.DefaultRequestHeaders.Add("X-Api-Key", apiKey);
+});
+// ไม่ต้อง ConfigurePrimaryHttpMessageHandler — ไม่ใช้ Windows Auth
 
 // ── MVC ───────────────────────────────────────────────────────────────────────
 builder.Services.AddControllersWithViews();
@@ -53,7 +72,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
-    name:    "default",
+    name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();
