@@ -40,19 +40,26 @@
                         <div class="col-md-8">
                             <div class="row g-2 small">
                                 <div class="col-6">
-                                    <span class="text-muted">Full Name (TH)</span>
+                                    <span class="text-muted">
+                                        Full Name (TH) <span class="text-danger">*</span>
+                                    </span>
                                     <div class="fw-semibold">@existing.FullNameTH</div>
                                 </div>
                                 <div class="col-6">
-                                    <span class="text-muted">Full Name (EN)</span>
+                                    <span class="text-muted">
+                                        Full Name (EN)   <span class="text-danger">*</span>
+                                    </span>
                                     <div class="fw-semibold">@existing.FullNameEN</div>
                                 </div>
                                 <div class="col-6">
-                                    <span class="text-muted">Position</span>
+                                    <span class="text-muted">Position <span class="text-danger">*</span> 
+                                    </span>
                                     <div>@(existing.Position ?? "-")</div>
                                 </div>
                                 <div class="col-6">
-                                    <span class="text-muted">Department</span>
+                                    <span class="text-muted">Department
+                                        <span class="text-danger">*</span>
+                                    </span>
                                     <div>@(existing.Department ?? "-")</div>
                                 </div>
                                 <div class="col-6">
@@ -99,8 +106,9 @@
                         <!-- Full Name TH -->
                         <div class="col-md-6">
                             <label asp-for="FullNameTH" class="form-label fw-semibold"></label>
+                            <span class="text-danger">*</span>
                             <input asp-for="FullNameTH" class="form-control"
-                                   placeholder="สกุลชัย ปานวิลัย"
+                                   placeholder="ชื่อ นามสกุล"
                                    value="@(existing?.FullNameTH ?? "")" />
                             <span asp-validation-for="FullNameTH" class="text-danger small"></span>
                         </div>
@@ -108,8 +116,9 @@
                         <!-- Full Name EN -->
                         <div class="col-md-6">
                             <label asp-for="FullNameEN" class="form-label fw-semibold"></label>
+                            <span class="text-danger">*</span>
                             <input asp-for="FullNameEN" class="form-control"
-                                   placeholder="Sakulchai Panwilai"
+                                   placeholder="Employee Fullname"
                                    value="@(existing?.FullNameEN ?? "")" />
                             <span asp-validation-for="FullNameEN" class="text-danger small"></span>
                         </div>
@@ -117,24 +126,28 @@
                         <!-- Position -->
                         <div class="col-md-6">
                             <label asp-for="Position" class="form-label fw-semibold"></label>
+
+                            <span class="text-danger">*</span>
                             <input asp-for="Position" class="form-control"
-                                   placeholder="Senior IT Officer"
+                                   placeholder=""
                                    value="@(existing?.Position ?? "")" />
                         </div>
 
                         <!-- Department -->
                         <div class="col-md-6">
                             <label asp-for="Department" class="form-label fw-semibold"></label>
+                            <span class="text-danger">*</span>
                             <input asp-for="Department" class="form-control"
-                                   placeholder="Information Technology"
+                                   placeholder=""
                                    value="@(existing?.Department ?? "")" />
                         </div>
 
                         <!-- Email -->
                         <div class="col-md-6">
                             <label asp-for="Email" class="form-label fw-semibold"></label>
+                            <span class="text-danger">*</span>
                             <input asp-for="Email" class="form-control" type="email"
-                                   placeholder="sakulchai.p@berninathailand.com"
+                                   placeholder=""
                                    value="@(existing?.Email ?? "")" />
                             <span asp-validation-for="Email" class="text-danger small"></span>
                         </div>
@@ -393,6 +406,7 @@
                 const btn = document.getElementById('btnRegister');
                 btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
                 btn.disabled = true;
+                return;
             });
 
             // ── Tab switch — ล้าง validation ──────────────────────────────────────────
